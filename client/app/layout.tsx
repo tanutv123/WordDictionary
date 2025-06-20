@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { StoreWrapper } from '@/store/storeWrapper'
+import { Toast, ToastProvider } from '@radix-ui/react-toast'
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -14,7 +16,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <StoreWrapper>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </StoreWrapper>
+      </body>
     </html>
   )
 }

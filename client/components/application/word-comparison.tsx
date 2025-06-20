@@ -1,9 +1,9 @@
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {Label} from "@/components/ui/label";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
-import {Plus, X} from "lucide-react";
-import {useState} from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, X } from "lucide-react";
+import { useState } from "react";
 
 function WordComparison() {
     // Word comparison state - new design
@@ -185,15 +185,14 @@ function WordComparison() {
                                         <div className="flex items-center gap-3 min-w-[140px]">
                                             <div className="flex-1 bg-muted rounded-full h-3">
                                                 <div
-                                                    className={`h-3 rounded-full transition-all duration-700 ${
-                                                        similarity >= 80
+                                                    className={`h-3 rounded-full transition-all duration-700 ${similarity >= 80
                                                             ? "bg-green-500"
                                                             : similarity >= 60
                                                                 ? "bg-blue-500"
                                                                 : similarity >= 40
                                                                     ? "bg-yellow-500"
                                                                     : "bg-red-500"
-                                                    }`}
+                                                        }`}
                                                     style={{ width: `${similarity}%` }}
                                                 />
                                             </div>

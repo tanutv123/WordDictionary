@@ -39,9 +39,17 @@ namespace Application.Words
                     .ProjectTo<WordDto>(_mapper.ConfigurationProvider);
 
                 var count = await query.CountAsync(cancellationToken);
+                if(!string.IsNullOrWhiteSpace(request.Params.SearchTerm))
+                {
+                    query = query.Where(w => w.Text.Contains(request.Params.SearchTerm) || w.Definition.Contains(request.Params.SearchTerm));
+                }
+
+                if (request.Params.Categories != null && request.Params.Categories.Any())
+                {
+                    query = query.Where(w => w.Categories.Any(c => request.Params.Categories.Contains(c)));
+                }
 
                 var items = await query
-                    .Where(x => x.Text.Contains(request.Params.SearchTerm) || x.Definition.Contains(request.Params.SearchTerm))
                     .Skip((request.Params.PageNumber - 1) * request.Params.PageSize)
                     .Take(request.Params.PageSize)
                     .ToListAsync(cancellationToken);

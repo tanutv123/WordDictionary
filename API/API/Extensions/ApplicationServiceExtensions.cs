@@ -19,6 +19,14 @@ namespace API.Extensions
                 opt.UseSqlServer(config.GetConnectionString("DefaultConnection"));
             });
 
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy("CorsPolicy", policy =>
+                {
+                    policy.AllowAnyMethod().AllowAnyHeader().WithOrigins("http://localhost:3000");
+                });
+            });
+
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(typeof(Add.CommandHandler).Assembly));
             services.AddAutoMapper(typeof(MappingProfiles).Assembly);
 
