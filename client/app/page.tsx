@@ -26,7 +26,7 @@ import WordFilter from "@/components/application/word-filter"
 
 function DictionaryPage() {
   const { wordStore, categoryStore } = useStore();
-  const { words, setWords, pagination, setPagingParams, loading, setPagination, loadWords } = wordStore;
+  const { words, pagination, setPagingParams, loading, loadWords, setAddWord } = wordStore;
   const { categories } = categoryStore;
   const [loadingNext, setLoadingNext] = useState(false);
 
@@ -53,23 +53,6 @@ function DictionaryPage() {
       })
   }
 
-  // Add a new word card
-  const addWord = () => {
-    const newWord = {
-      id: `w${Date.now()}`,
-      text: "New Word",
-      definition: "Definition goes here",
-      parentId: null,
-      categories: ["Uncategorized"],
-      expanded: false,
-      isEditing: true,
-      examples: [],
-      synonyms: [],
-    }
-    setWords([...words, newWord])
-  }
-
-
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -77,7 +60,7 @@ function DictionaryPage() {
         <div className="xl:col-span-2">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Dictionary</h1>
-            <Button onClick={addWord}>
+            <Button onClick={setAddWord}>
               <Plus className="mr-2 h-4 w-4" /> Add Word
             </Button>
           </div>

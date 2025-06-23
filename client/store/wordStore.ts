@@ -2,6 +2,7 @@ import agent from "@/api/agent";
 import { Pagination, PagingParams } from "@/models/pagination";
 import { Word } from "@/models/word";
 import { makeAutoObservable, reaction } from "mobx";
+import { v4 as uuid } from 'uuid';
 
 
 export default class WordStore {
@@ -68,31 +69,46 @@ export default class WordStore {
     }
 
     setEditWord = (wordId: string) => {
+        if (wordId.includes('new')) {
+            this.words = this.words.filter((word) => word.id !== wordId);
+            return;
+        }
         this.words = this.words.map((word) =>
             word.id === wordId ? { ...word, isEditing: !word.isEditing } : word
         );
     }
+
+    setAddWord = () => {
+        const newWord = {
+            id: `new-${uuid()}`,
+            text: "",
+            definition: "",
+            parentId: null,
+            categories: [],
+            expanded: false,
+            isEditing: true,
+            examples: [],
+            synonyms: [],
+        }
+        this.words = [newWord, ...this.words];
+    }
+
     deleteWord = (wordId: string) => {
         this.words = this.words.filter((word) => word.id !== wordId);
     }
-    saveWord = (wordId: string, updatedWord: Partial<any>) => {
+    saveWord = (wordId: string, updatedWord: Partial<Word>) => {
+        if (wordId.includes('new')) {
+            //Add word logic
+            this.words = this.words
+                .map((word) => (word.id === wordId ? { ...word, ...updatedWord, isEditing: false } : word));
+            return;
+        }
         this.words = this.words
             .map((word) => (word.id === wordId ? { ...word, ...updatedWord, isEditing: false } : word));
     }
+    //End of Word Manipulation methods
 
-    setEditSynonym = (wordId: string, synonymId: string) => {
-        this.words = this.words.map((word) =>
-            word.id === wordId
-                ? {
-                    ...word,
-                    synonyms: word.synonyms.map((syn) =>
-                        syn.id === synonymId ? { ...syn, isEditing: !syn.isEditing } : syn
-                    ),
-                }
-                : word
-        )
-    }
-
+    //Start of Synonym related methods
     addSynonym = (wordId: string) => {
         const newSynonym = {
             id: `s${Date.now()}`,
@@ -109,6 +125,20 @@ export default class WordStore {
                 : word
         )
     }
+
+    setEditSynonym = (wordId: string, synonymId: string) => {
+        this.words = this.words.map((word) =>
+            word.id === wordId
+                ? {
+                    ...word,
+                    synonyms: word.synonyms.map((syn) =>
+                        syn.id === synonymId ? { ...syn, isEditing: !syn.isEditing } : syn
+                    ),
+                }
+                : word
+        )
+    }
+
     deleteSynonym = (wordId: string, synonymId: string) => {
         this.words = this.words.map((word) =>
             word.id === wordId
@@ -145,8 +175,7 @@ export default class WordStore {
                 : word
         );
     };
-
-    //End of Word Manipulation methods
+    //End of Synonym related methods
 
     //Loading and words related methods
     setLoading = (loading: boolean) => {

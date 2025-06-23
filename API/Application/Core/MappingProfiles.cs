@@ -12,7 +12,8 @@ namespace Application.Words
                 .ForMember(d => d.Examples, o => o.MapFrom(s => s.Examples.Select(x => new Example { Text = x })))
                 .ReverseMap();
             CreateMap<Word, WordDto>()
-                .ForMember(d => d.Categories, opt => opt.MapFrom(src => src.Categories.Select(x => x.Name)));
+                .ForMember(d => d.Categories, opt => opt.MapFrom(src => src.Categories.Select(x => x.Name)))
+                .ForMember(d => d.CategoryIds, opt => opt.MapFrom(src => src.Categories.Select(x => x.Id)));
             CreateMap<ExampleDto, Example>()
                 .ReverseMap();
             CreateMap<EditExampleDto, Example>()

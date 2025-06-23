@@ -7,6 +7,7 @@
         public string? Definition { get; set; }
         public Guid? ParentId { get; set; }
         public List<string> Categories { get; set; }
+        public List<Guid> CategoryIds { get; set; }
         public List<ExampleDto> Examples { get; set; } = new();
         public List<SynonymDto> Synonyms { get; set; } = new();
     }

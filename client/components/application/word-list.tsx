@@ -2,12 +2,14 @@ import { observer } from "mobx-react-lite";
 import WordCard from "./word-card";
 import { useStore } from "@/store/useStore";
 import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
 
 function WordList() {
     const { wordStore } = useStore();
     const { words, setWords, setExpanded, setEditWord,
         setEditSynonym, addSynonym, saveSynonym, saveWord,
-        deleteSynonym, deleteWord, handleChangeSynonym
+        deleteSynonym, deleteWord, handleChangeSynonym,
+        searchTerm, selectedCategories
     } = wordStore;
 
     // Delete an example
@@ -45,7 +47,7 @@ function WordList() {
                         <CardContent className="pt-6">
                             <div className="text-center text-muted-foreground">
                                 <p>No words found matching your criteria.</p>
-                                {/* {(searchTerm || selectedCategory !== "All") && (
+                                {(searchTerm || selectedCategories.length !== 0) && (
                                     <Button
                                         variant="link"
                                         onClick={() => {
@@ -56,7 +58,7 @@ function WordList() {
                                     >
                                         Clear filters to see all words
                                     </Button>
-                                )} */}
+                                )}
                             </div>
                         </CardContent>
                     </Card>
