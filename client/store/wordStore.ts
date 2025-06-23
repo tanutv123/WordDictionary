@@ -1,8 +1,7 @@
 import agent from "@/api/agent";
 import { Pagination, PagingParams } from "@/models/pagination";
 import { Word } from "@/models/word";
-import { log } from "console";
-import { makeAutoObservable } from "mobx";
+import { makeAutoObservable, reaction } from "mobx";
 
 
 export default class WordStore {
@@ -15,7 +14,17 @@ export default class WordStore {
 
     constructor() {
         makeAutoObservable(this);
+
+        reaction(
+            () => [this.searchTerm, this.selectedCategories],
+            () => {
+                this.setPagingParams(new PagingParams());
+                this.words = [];
+                this.loadWords();
+            }
+        );
     }
+
 
     //Pagination related methods
     setPagingParams = (params: PagingParams) => {
@@ -40,13 +49,112 @@ export default class WordStore {
     }
     //End of Pagination related methods
 
+    //Start of Search and Category related methods
+    setSelectedCategories = (categories: string[]) => {
+        this.selectedCategories = categories;
+    }
+
+    setSearchTerm = (term: string) => {
+        this.searchTerm = term;
+    }
+    //End of Search and Category related methods
+
+    //Start of Word Manipulation methods
+
+    setExpanded = (wordId: string) => {
+        this.words = this.words.map((word) =>
+            word.id === wordId ? { ...word, expanded: !word.expanded } : word
+        );
+    }
+
+    setEditWord = (wordId: string) => {
+        this.words = this.words.map((word) =>
+            word.id === wordId ? { ...word, isEditing: !word.isEditing } : word
+        );
+    }
+    deleteWord = (wordId: string) => {
+        this.words = this.words.filter((word) => word.id !== wordId);
+    }
+    saveWord = (wordId: string, updatedWord: Partial<any>) => {
+        this.words = this.words
+            .map((word) => (word.id === wordId ? { ...word, ...updatedWord, isEditing: false } : word));
+    }
+
+    setEditSynonym = (wordId: string, synonymId: string) => {
+        this.words = this.words.map((word) =>
+            word.id === wordId
+                ? {
+                    ...word,
+                    synonyms: word.synonyms.map((syn) =>
+                        syn.id === synonymId ? { ...syn, isEditing: !syn.isEditing } : syn
+                    ),
+                }
+                : word
+        )
+    }
+
+    addSynonym = (wordId: string) => {
+        const newSynonym = {
+            id: `s${Date.now()}`,
+            text: "",
+            isEditing: true,
+        }
+
+        this.words = this.words.map((word) =>
+            word.id === wordId
+                ? {
+                    ...word,
+                    synonyms: [...word.synonyms, newSynonym],
+                }
+                : word
+        )
+    }
+    deleteSynonym = (wordId: string, synonymId: string) => {
+        this.words = this.words.map((word) =>
+            word.id === wordId
+                ? {
+                    ...word,
+                    synonyms: word.synonyms.filter((syn) => syn.id !== synonymId),
+                }
+                : word
+        )
+    }
+
+    saveSynonym = (wordId: string, synonymId: string, updatedSynonym: Partial<any>) => {
+        this.words = this.words.map((word) =>
+            word.id === wordId
+                ? {
+                    ...word,
+                    synonyms: word.synonyms.map((syn) =>
+                        syn.id === synonymId ? { ...syn, ...updatedSynonym, isEditing: false } : syn
+                    ),
+                }
+                : word
+        )
+    }
+
+    handleChangeSynonym = (wordId: string, synonymId: string, text: string) => {
+        this.words = this.words.map((word) =>
+            word.id === wordId
+                ? {
+                    ...word,
+                    synonyms: word.synonyms.map((syn) =>
+                        syn.id === synonymId ? { ...syn, text } : syn
+                    ),
+                }
+                : word
+        );
+    };
+
+    //End of Word Manipulation methods
+
     //Loading and words related methods
     setLoading = (loading: boolean) => {
         this.loading = loading;
     }
 
     setWords = (words: Word[]) => {
-        this.words = words;
+        this.words = this.words.concat(words);
     }
 
     loadWords = async () => {
@@ -55,7 +163,6 @@ export default class WordStore {
             const data = await agent.Words.list(this.axiosParams);
             this.setPagination(data.pagination);
             this.setWords(data.items);
-            console.log('Words loaded:', this.words);
         } catch (error) {
             console.error('Failed to fetch words:', error);
         } finally {

@@ -1,5 +1,6 @@
 ﻿using API.Extensions;
 using Application.Core;
+using Application.Words;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,5 +34,26 @@ namespace API.Controllers
                 return BadRequest(result.Error);
             }
         }
-	}
+        protected ActionResult HandlePagedResult<T>(Result<PaginatedList<T>> result)
+        {
+            if (result == null)
+            {
+                return NotFound();
+            }
+            if (result.IsSuccess && result.Error == null)
+            {
+                Response.AddPaginationHeader(result.Value.PageNumber, result.Value.PageSize,
+                    result.Value.TotalCount, result.Value.TotalPages);
+                return Ok(result.Value);
+            }
+            else if (result.IsSuccess && result.Value == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                return BadRequest(result.Error);
+            }
+        }
+    }
 }

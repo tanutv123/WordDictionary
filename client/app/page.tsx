@@ -18,20 +18,22 @@ import { observer } from "mobx-react-lite"
 import { useStore } from "@/store/useStore"
 import WordList from "@/components/application/word-list"
 import WordCardSkeleton from "@/components/application/word-card-skeleton"
+import InfiniteScroll from "react-infinite-scroller"
+import { PagingParams } from "@/models/pagination"
+import BottomLoader from "@/components/application/bottom-loader"
+import WordFilter from "@/components/application/word-filter"
+
 
 function DictionaryPage() {
   const { wordStore, categoryStore } = useStore();
-  const { words, setWords, pagination, setPagingParams, loading, setPagination } = wordStore;
+  const { words, setWords, pagination, setPagingParams, loading, setPagination, loadWords } = wordStore;
   const { categories } = categoryStore;
   const [loadingNext, setLoadingNext] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("")
 
   useEffect(() => {
     // Load words and categories when the component mounts
     wordStore.loadWords();
-    categoryStore.loadCategories();
-  }, [wordStore, categoryStore]);
+  }, [wordStore]);
 
   // Filter words based on search term and category
   // const filteredWords = words.filter((word) => {
@@ -42,6 +44,15 @@ function DictionaryPage() {
   //   return matchesSearch && matchesCategory
   // })
 
+  function handleGetNext() {
+    setLoadingNext(true);
+    setPagingParams(new PagingParams(pagination!.currentPage + 1));
+    loadWords()
+      .finally(() => {
+        setLoadingNext(false);
+      })
+  }
+
   // Add a new word card
   const addWord = () => {
     const newWord = {
@@ -49,7 +60,7 @@ function DictionaryPage() {
       text: "New Word",
       definition: "Definition goes here",
       parentId: null,
-      category: "Uncategorized",
+      categories: ["Uncategorized"],
       expanded: false,
       isEditing: true,
       examples: [],
@@ -72,80 +83,31 @@ function DictionaryPage() {
           </div>
 
           {/* Filter Section */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="search" className="text-sm font-medium mb-2 block">
-                    Search Words
-                  </Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      id="search"
-                      placeholder="Search by word or definition..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <div className="sm:w-48">
-                  <Label htmlFor="category" className="text-sm font-medium mb-2 block">
-                    Filter by Category
-                  </Label>
-                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                    <SelectTrigger>
-                      <Filter className="mr-2 h-4 w-4" />
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {(searchTerm || selectedCategory !== "All") && (
-                  <div className="flex items-end">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setSearchTerm("")
-                        setSelectedCategory("All")
-                      }}
-                    >
-                      Clear Filters
-                    </Button>
-                  </div>
-                )}
-              </div>
+          <WordFilter />
 
-              {/* Results count */}
-              <div className="mt-4 text-sm text-muted-foreground">
-                Showing {pagination && pagination.itemsPerPage * pagination.currentPage} of {pagination && pagination.totalItems} words
-                {searchTerm && ` matching "${searchTerm}"`}
-                {selectedCategory !== "All" && ` in category "${selectedCategory}"`}
-              </div>
-            </CardContent>
-          </Card>
 
           <div className="grid gap-6">
-            {loading ? (
-              <WordCardSkeleton/>
-            ) : (
-              <WordList />
-            )}
+            {
+              loading && words.length === 0 && !loadingNext ? (
+                <WordCardSkeleton />
+              ) : (
+                <InfiniteScroll
+                  pageStart={1}
+                  loadMore={handleGetNext}
+                  hasMore={!loadingNext && !!pagination && pagination.currentPage < pagination.totalPages}
+                  initialLoad={false}
+                >
+                  <WordList />
+                </InfiniteScroll>
+              )
+            }
+            <BottomLoader active={loadingNext} />
           </div>
         </div>
 
         {/* Right Section */}
         <div className="xl:col-span-1">
-          {/* Word Comparison Section */}
           <WordComparison />
-          {/* AI Chatbot Section */}
           <ChatBox />
         </div>
       </div>

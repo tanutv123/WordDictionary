@@ -28,14 +28,14 @@ namespace Application.Words
 
             public async Task<Result<PaginatedList<WordDto>>> Handle(Query request, CancellationToken cancellationToken)
             {
-                var synonymIds = await _context.Words
-                    .SelectMany(w => w.Synonyms.Select(s => s.Id))
-                    .Distinct()
-                    .ToListAsync(cancellationToken);
+                //var synonymIds = await _context.Words
+                //    .SelectMany(w => w.Synonyms.Select(s => s.Id))
+                //    .Distinct()
+                //    .ToListAsync(cancellationToken);
 
                 var query = _context.Words
                     .AsNoTracking()
-                    .Where(w => !synonymIds.Contains(w.Id))
+                    .Where(w => w.ParentId == null)
                     .ProjectTo<WordDto>(_mapper.ConfigurationProvider);
 
                 var count = await query.CountAsync(cancellationToken);
@@ -49,12 +49,12 @@ namespace Application.Words
                     query = query.Where(w => w.Categories.Any(c => request.Params.Categories.Contains(c)));
                 }
 
-                var items = await query
-                    .Skip((request.Params.PageNumber - 1) * request.Params.PageSize)
-                    .Take(request.Params.PageSize)
-                    .ToListAsync(cancellationToken);
+                //var items = query
+                //    .Skip((request.Params.PageNumber - 1) * request.Params.PageSize)
+                //    .Take(request.Params.PageSize);
 
-                var paginatedList = new PaginatedList<WordDto>(items, count, request.Params.PageNumber, request.Params.PageSize);
+                var paginatedList = await PaginatedList<WordDto>
+                    .CreateAsync(query, count, request.Params.PageNumber, request.Params.PageSize);
 
                 return Result<PaginatedList<WordDto>>.Success(paginatedList);
             }

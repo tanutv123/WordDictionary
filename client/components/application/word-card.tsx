@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Edit, Trash, ChevronUp, ChevronDown, Check, X } from "lucide-react";
 import SynonymList from "./synonym-list";
-import React from "react";
+import React, { useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 
 type WordCardProps = {
     word: Word;
@@ -21,7 +22,7 @@ type WordCardProps = {
     onSaveWord: (wordId: string, updated: Partial<Word>) => void;
 };
 
-export default function WordCard({
+function WordCard({
     word,
     onToggleExpand,
     onToggleEdit,
@@ -34,46 +35,81 @@ export default function WordCard({
     onSaveWord,
 }: WordCardProps) {
     return (
-        <Card className="w-full overflow-hidden">
+        <Card className="w-full mb-3 overflow-hidden">
             {word.isEditing ? (
                 <CardContent className="pt-6">
-                    <div className="grid gap-4">
-                        <div>
-                            <Label htmlFor={`word-${word.id}`}>Word</Label>
-                            <Input
-                                id={`word-${word.id}`}
-                                value={word.text}
-                                onChange={(e) => onSaveWord(word.id, { text: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <Label htmlFor={`definition-${word.id}`}>Definition</Label>
-                            <Textarea
-                                id={`definition-${word.id}`}
-                                value={word.definition}
-                                onChange={(e) => onSaveWord(word.id, { definition: e.target.value })}
-                            />
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => onToggleEdit(word.id)}>
-                                <X className="mr-2 h-4 w-4" /> Cancel
-                            </Button>
-                            <Button onClick={() => onSaveWord(word.id, { text: word.text, definition: word.definition })}>
-                                <Check className="mr-2 h-4 w-4" /> Save
-                            </Button>
-                        </div>
-                    </div>
+                    <Formik
+                        initialValues={{ text: word.text || "", definition: word.definition || "" }}
+                        enableReinitialize
+                        validate={values => {
+                            const errors: { text?: string; definition?: string } = {};
+                            if (!values.text || values.text.trim() === "") {
+                                errors.text = "Word is required.";
+                            }
+                            if (!values.definition || values.definition.trim() === "") {
+                                errors.definition = "Definition is required.";
+                            }
+                            return errors;
+                        }}
+                        onSubmit={(values) => {
+                            onSaveWord(word.id, { text: values.text, definition: values.definition });
+                        }}
+                    >
+                        {({ isSubmitting, isValid, dirty, resetForm }) => (
+                            <Form className="grid gap-4">
+                                <div>
+                                    <Label htmlFor={`word-${word.id}`}>Word</Label>
+                                    <Field
+                                        as={Input}
+                                        id={`word-${word.id}`}
+                                        name="text"
+                                        autoComplete="off"
+                                    />
+                                    <ErrorMessage name="text" component="p" className="text-xs text-red-500 mt-1" />
+                                </div>
+                                <div>
+                                    <Label htmlFor={`definition-${word.id}`}>Definition</Label>
+                                    <Field
+                                        as={Textarea}
+                                        id={`definition-${word.id}`}
+                                        name="definition"
+                                        autoComplete="off"
+                                    />
+                                    <ErrorMessage name="definition" component="p" className="text-xs text-red-500 mt-1" />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        variant="outline"
+                                        type="button"
+                                        onClick={() => {
+                                            onToggleEdit(word.id);
+                                            resetForm();
+                                        }}
+                                    >
+                                        <X className="mr-2 h-4 w-4" /> Cancel
+                                    </Button>
+                                    <Button type="submit" disabled={isSubmitting || !isValid || !dirty}>
+                                        <Check className="mr-2 h-4 w-4" /> Save
+                                    </Button>
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
                 </CardContent>
             ) : (
-                <>
+                <div key={word.id}>
                     <CardHeader className="pb-3">
                         <div className="flex justify-between">
                             <div className="flex-1">
                                 <div className="flex items-center gap-3">
                                     <h2 className="text-2xl font-bold">{word.text}</h2>
-                                    <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-md">
-                                        {word.category}
-                                    </span>
+                                    {
+                                        word.categories.map((category, index) => (
+                                            <span key={index} className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-md">
+                                                {category}
+                                            </span>
+                                        ))
+                                    }
                                 </div>
                             </div>
                             <div className="flex gap-2">
@@ -118,8 +154,10 @@ export default function WordCard({
                             </div>
                         )}
                     </CardContent>
-                </>
+                </div>
             )}
         </Card>
     );
 }
+
+export default WordCard;

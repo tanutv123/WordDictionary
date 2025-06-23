@@ -12,7 +12,7 @@ namespace API.Controllers
             {
                 Params = param
             });
-            return HandleResult(result);
+            return HandlePagedResult(result);
         }
 
         [HttpPost]

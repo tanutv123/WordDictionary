@@ -1,18 +1,26 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Application.Words;
 
-public class PaginatedList<T>
+public class PaginatedList<T> : List<T>
 {
-    public List<T> Items { get; }
-    public int PageNumber { get; }
-    public int PageSize { get; }
-    public int TotalCount { get; }
-    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
-
-    public PaginatedList(List<T> items, int count, int pageNumber, int pageSize)
+    public PaginatedList(IEnumerable<T> items, int count, int pageNumber, int pageSize)
     {
-        Items = items;
-        TotalCount = count;
         PageNumber = pageNumber;
+        TotalPages = (int)Math.Ceiling(count / (double)pageSize);
         PageSize = pageSize;
+        TotalCount = count;
+        AddRange(items);
+    }
+
+    public int PageNumber { get; set; }
+    public int TotalPages { get; set; }
+    public int PageSize { get; set; }
+    public int TotalCount { get; set; }
+
+    public static async Task<PaginatedList<T>> CreateAsync(IQueryable<T> source, int count,  int pageNumber, int pageSize)
+    {
+        var items = await source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+        return new PaginatedList<T>(items, count, pageNumber, pageSize);
     }
 }

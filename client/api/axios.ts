@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { router } from "next/client";
+import { PaginatedResult } from "@/models/pagination";
 
 const sleep = (delay: number) => new Promise(resolve => setTimeout(resolve, delay));
 
@@ -9,7 +10,13 @@ const createAxiosInstance = (baseURL: string, withCredentials = false): AxiosIns
 
     instance.interceptors.response.use(
         async response => {
-            // await sleep(500); // Optional: add delay for dev
+            await sleep(500); // Optional: add delay for dev
+            //Handle Pagination in Headers
+            const pagination = response.headers['pagination'];
+            if (pagination) {
+                response.data = new PaginatedResult(response.data, JSON.parse(pagination));
+                return response as AxiosResponse<PaginatedResult<any>>;
+            }
             return response;
         },
         (error: AxiosError) => {

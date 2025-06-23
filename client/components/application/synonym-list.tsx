@@ -2,7 +2,7 @@ import { Synonym } from "@/models/word";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Edit, Trash, Check, X } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 
 type SynonymListProps = {
     synonyms: Synonym[];
@@ -14,6 +14,7 @@ type SynonymListProps = {
 };
 
 export default function SynonymList({ synonyms, wordId, onEdit, onSave, onDelete, onChange }: SynonymListProps) {
+    const [editingText, setEditingText] = useState("");
     return (
         <div className="pl-4 border-l-2 border-gray-200 space-y-4">
             {synonyms.length === 0 ? (
@@ -24,11 +25,16 @@ export default function SynonymList({ synonyms, wordId, onEdit, onSave, onDelete
                         {synonym.isEditing ? (
                             <div className="flex gap-2">
                                 <Input
-                                    value={synonym.text}
-                                    onChange={(e) => onChange(wordId, synonym.id, e.target.value)}
+                                    value={editingText}
+                                    onChange={(e) => setEditingText(e.target.value)}
                                     className="flex-1"
                                 />
-                                <Button onClick={() => onSave(wordId, synonym.id, { text: synonym.text })}>
+                                <Button
+                                    onClick={() => {
+                                        onSave(wordId, synonym.id, { text: editingText });
+                                    }}
+                                    disabled={!editingText || editingText.trim() === ""}
+                                >
                                     <Check className="mr-2 h-4 w-4" /> Save
                                 </Button>
                                 <Button variant="outline" onClick={() => onEdit(wordId, synonym.id)}>
@@ -39,7 +45,10 @@ export default function SynonymList({ synonyms, wordId, onEdit, onSave, onDelete
                             <div className="flex justify-between items-center">
                                 <span className="font-medium">{synonym.text}</span>
                                 <div className="flex gap-1">
-                                    <Button variant="ghost" size="sm" onClick={() => onEdit(wordId, synonym.id)}>
+                                    <Button variant="ghost" size="sm" onClick={() => {
+                                        onEdit(wordId, synonym.id);
+                                        setEditingText(synonym.text!);
+                                    }}>
                                         <Edit className="h-3 w-3" />
                                         <span className="sr-only">Edit</span>
                                     </Button>

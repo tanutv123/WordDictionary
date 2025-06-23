@@ -14,7 +14,7 @@ export type Word = {
     text?: string
     definition?: string
     parentId?: string | null
-    category: string
+    categories: string[]
     examples: Example[]
     synonyms: Synonym[]
     expanded: boolean
