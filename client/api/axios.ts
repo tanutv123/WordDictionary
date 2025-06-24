@@ -1,7 +1,9 @@
+// import { router } from 'next/client';
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
-import { router } from "next/client";
+import router from "next/router";
 import { PaginatedResult } from "@/models/pagination";
+import { store } from "@/store/store";
 
 const sleep = (delay: number) => new Promise(resolve => setTimeout(resolve, delay));
 
@@ -21,7 +23,6 @@ const createAxiosInstance = (baseURL: string, withCredentials = false): AxiosIns
         },
         (error: AxiosError) => {
             const { data, status, config, headers } = error.response as AxiosResponse;
-
             switch (status) {
                 case 400:
                     if (config.method === 'get' && Object.prototype.hasOwnProperty.call(data.errors, 'id')) {
@@ -50,10 +51,11 @@ const createAxiosInstance = (baseURL: string, withCredentials = false): AxiosIns
                     toast.error('Forbidden');
                     break;
                 case 404:
-                    router.push('/not-found');
+                    router.push('/server-error');
                     break;
                 case 500:
-                    router.push('/server-error');
+                    store.commonStore.setError(data);
+                    router.push('/error/server-error');
                     break;
             }
 

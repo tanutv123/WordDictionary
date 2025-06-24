@@ -3,17 +3,10 @@
 import { useEffect, useState } from "react"
 import {
   Plus,
-  Search,
-  Filter,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import ChatBox from "@/components/application/chat-box";
 import WordComparison from "@/components/application/word-comparison";
-import WordCard from "@/components/application/word-card";
 import { observer } from "mobx-react-lite"
 import { useStore } from "@/store/useStore"
 import WordList from "@/components/application/word-list"

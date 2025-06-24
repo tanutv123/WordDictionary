@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Trash, ChevronUp, ChevronDown, Check, X } from "lucide-react";
+import { Plus, Edit, Trash, ChevronUp, ChevronDown, Check, X, Loader2Icon } from "lucide-react";
 import SynonymList from "./synonym-list";
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage, FieldArray } from "formik";
@@ -13,6 +13,8 @@ import { observer } from "mobx-react-lite";
 import { useStore } from "@/store/useStore";
 import { Select, SelectContent, SelectTrigger } from "../ui/select";
 import { v4 as uuid } from "uuid";
+import ValidationError from "../error/validation-error";
+import { set } from "date-fns";
 
 
 type WordCardProps = {
@@ -25,7 +27,7 @@ type WordCardProps = {
     onSaveSynonym: (wordId: string, synonymId: string, updated: Partial<Synonym>) => void;
     onDeleteSynonym: (wordId: string, synonymId: string) => void;
     onChangeSynonym: (wordId: string, synonymId: string, text: string) => void;
-    onSaveWord: (wordId: string, updated: Partial<Word>) => void;
+    onSaveWord: (wordId: string, updated: Partial<Word>) => Promise<void>;
 };
 
 function WordCard({
@@ -40,8 +42,9 @@ function WordCard({
     onChangeSynonym,
     onSaveWord,
 }: WordCardProps) {
-    const { categoryStore } = useStore();
+    const { categoryStore, wordStore } = useStore();
     const { categories } = categoryStore;
+    const [loadingSave, setLoadingSave] = useState(false);
     const [categorySearch, setCategorySearch] = useState("");
     const validationSchema = Yup.object({
         text: Yup.string().required("Word is required."),
@@ -59,22 +62,28 @@ function WordCard({
             {word.isEditing ? (
                 <CardContent className="pt-6">
                     <Formik
-                        initialValues={{ text: word.text || "", definition: word.definition || "", categoryIds: word.categoryIds || [], categories: word.categories || [], examples: word.examples || [] }}
+                        initialValues={{ id: word.id, text: word.text || "", definition: word.definition || "", categoryIds: word.categoryIds || [], categories: word.categories || [], examples: word.examples || [], error: [] }}
                         enableReinitialize
                         validationSchema={validationSchema}
-                        onSubmit={(values) => {
-                            onSaveWord(word.id, values);
+                        onSubmit={(values, { setErrors }) => {
+                            setLoadingSave(true);
+                            onSaveWord(word.id, values)
+                                .catch((error) => { if (Array.isArray(error)) setErrors({ error }); })
+                                .finally(() => setLoadingSave(false));
                         }}
                     >
                         {({ isSubmitting, isValid, dirty, resetForm, errors, setFieldValue, values, touched }) => (
                             <Form className="grid gap-4">
+                                <div>
+                                    <ValidationError error={errors.error as unknown as string[]} />
+                                </div>
                                 <div>
                                     <Label htmlFor={`word-${word.id}`}>Word</Label>
                                     <Field
                                         as={Input}
                                         id={`word-${word.id}`}
                                         name="text"
-                                        className={errors.text ? "border-red-500" : ""}
+                                        className={errors.text && touched.text ? "border-red-500" : ""}
                                         autoComplete="off"
                                     />
                                     <ErrorMessage name="text" component="p" className="text-xs text-red-500 mt-1" />
@@ -85,7 +94,7 @@ function WordCard({
                                         as={Textarea}
                                         id={`definition-${word.id}`}
                                         name="definition"
-                                        className={errors.definition ? "border-red-500" : ""}
+                                        className={errors.definition && touched.definition ? "border-red-500" : ""}
                                         autoComplete="off"
                                     />
                                     <ErrorMessage name="definition" component="p" className="text-xs text-red-500 mt-1" />
@@ -231,7 +240,7 @@ function WordCard({
                                         <X className="mr-2 h-4 w-4" /> Cancel
                                     </Button>
                                     <Button type="submit" disabled={isSubmitting || !isValid || !dirty}>
-                                        <Check className="mr-2 h-4 w-4" /> Save
+                                        {loadingSave ? <Loader2Icon className="animate-spin" /> : <><Check className="mr-2 h-4 w-4" /> Save</>}
                                     </Button>
                                 </div>
                             </Form>

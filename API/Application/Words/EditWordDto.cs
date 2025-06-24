@@ -10,9 +10,10 @@ namespace Application.Words
     {
         public Guid Id { get; set; }
         public string Text { get; set; } = string.Empty;
-        public string? Definition { get; set; }
-        public Guid? ParentId { get; set; }
-        public List<EditExampleDto>? Examples { get; set; }
+        public string Definition { get; set; } = string.Empty;
+        public Guid ParentId { get; set; }
+        public List<EditExampleDto> Examples { get; set; } = new List<EditExampleDto>();
+        public List<Guid> CategoryIds { get; set; } = new List<Guid>();
     }
     public class EditExampleDto
     {

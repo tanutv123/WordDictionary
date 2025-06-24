@@ -1,6 +1,6 @@
 import agent from "@/api/agent";
 import { Pagination, PagingParams } from "@/models/pagination";
-import { Word } from "@/models/word";
+import { Word, WordForm } from "@/models/word";
 import { makeAutoObservable, reaction } from "mobx";
 import { v4 as uuid } from 'uuid';
 
@@ -96,15 +96,28 @@ export default class WordStore {
     deleteWord = (wordId: string) => {
         this.words = this.words.filter((word) => word.id !== wordId);
     }
-    saveWord = (wordId: string, updatedWord: Partial<Word>) => {
+    saveWord = async (wordId: string, updatedWord: Partial<Word>) => {
         if (wordId.includes('new')) {
             //Add word logic
+            let wordForm = {
+                id: updatedWord.id,
+                text: updatedWord.text || "",
+                definition: updatedWord.definition || "",
+                parentId: updatedWord.parentId || null,
+                categoryIds: updatedWord.categoryIds || [],
+                examples: updatedWord.examples ? updatedWord.examples.map(ex => ex.text) : [],
+            } as WordForm
+
+            let result = await agent.Words.create(wordForm);
+            if (result) {
+                this.words = this.words.filter((word) => word.id !== wordId);
+                this.words = [result, ...this.words];
+            }
+        } else {
+            let result = await agent.Words.update(updatedWord as Word);
             this.words = this.words
-                .map((word) => (word.id === wordId ? { ...word, ...updatedWord, isEditing: false } : word));
-            return;
+                .map((word) => (word.id === wordId ? { ...word, ...result, isEditing: false } : word));
         }
-        this.words = this.words
-            .map((word) => (word.id === wordId ? { ...word, ...updatedWord, isEditing: false } : word));
     }
     //End of Word Manipulation methods
 

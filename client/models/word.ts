@@ -26,3 +26,12 @@ export type Category = {
     id: string;
     name: string;
 }
+
+export type WordForm = {
+    id?: string;
+    text: string;
+    definition: string;
+    parentId?: string | null;
+    categoryIds: string[];
+    examples: string[];
+}
